@@ -1,5 +1,5 @@
 
-# Kincony S3 Core Development Board
+# Kincony S3 Core Development Board RTU, I2C, 1-wire Demo Application
 The core development board uses the ESP32-S3-WROOM-1U N16R8 chip and compatible with Visual Studio Code and PlatformIO with the ESP-IDF SDK.  The PlatformIO board that was selected is the `esp32s3box` given this board uses the same chip.  The core development board comes with RS485, I2C, 1-wire, and analog input ports.  The analog input ports can use voltage or current signals which are set by jumpers. The board comes with an ethernet port and has support for the SIM7600 4G module and RF 433MHz reciever module.
 
 The demo application interfaces the following sensors:
