@@ -31,7 +31,7 @@
  * polled over one-wire-bus, the BMP280 is polled over I2C, and samples are 
  * printed via serial debug at a 6-second interval.
  * 
- * Components used in this demo are available here: https://github.com/K0I05/esp32-s3
+ * Components used in this demo are available here: https://github.com/K0I05/KINCONY-S3_RTU_20250110
  * 
  * 
  *

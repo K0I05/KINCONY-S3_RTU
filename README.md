@@ -5,6 +5,7 @@ The core development board uses the ESP32-S3-WROOM-1U N16R8 chip and compatible 
 Additional details on the KinCony S3 Core Development Board can be found here:
 - Specifications: https://shop.kincony.com/products/kincony-esp32-s3-wroom-1u-n16r8-core-development-board
 - GPIO Mapping: https://www.kincony.com/forum/showthread.php?tid=5715
+- Schematic: https://www.kincony.com/download/S3-schematic.pdf
 
 The demo application interfaces the following sensors:
 - RS2E radar precipitation sensor with temperature and humidity sensor (MODBUS RTU RS-485/12VDC)
