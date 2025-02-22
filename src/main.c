@@ -31,7 +31,9 @@
  * polled over one-wire-bus, the BMP280 is polled over I2C, and samples are 
  * printed via serial debug at a 6-second interval.
  * 
- * Components used in this demo are available here: https://github.com/K0I05/KINCONY-S3_RTU_20250110
+ * Demo source code is available here: https://github.com/K0I05/KINCONY-S3_RTU_20250110
+ * 
+ * Components used in this demo are available here: https://github.com/K0I05/ESP32-S3_ESP-IDF_COMPONENTS
  * 
  * 
  *
@@ -138,7 +140,7 @@
 /* component includes */
 #include <time_into_interval.h>
 #include <nvs_ext.h>
-#include <onewire_bus.h>
+//#include <onewire_bus.h>
 #include <ds18b20.h>
 #include <bmp280.h>
 
@@ -149,6 +151,11 @@
  */
 
 #define MINIMAL_STACK_SIZE                      (1024)
+
+/**
+ * @brief I2C and 1-Wire definitions
+ */
+
 #define I2C0_MASTER_PORT                        I2C_NUM_0
 #define I2C0_MASTER_SDA_IO                      GPIO_NUM_39 // blue
 #define I2C0_MASTER_SCL_IO                      GPIO_NUM_38 // yellow
@@ -264,7 +271,7 @@ static inline uint32_t print_free_heap_size(const uint32_t free_heap_size_last) 
  * @brief Calculates dewpoint temperature from air temperature and relative humidity.
  *
  * @param[in] temperature Air temperature in degrees Celsius.
- * @param[in] humidity Relative humiity in percent.
+ * @param[in] humidity Relative humidity in percent.
  * @return float Calculated dewpoint temperature in degrees Celsius.
  */
 static inline float rs2e_calculate_dewpoint(const float temperature, const float humidity) {

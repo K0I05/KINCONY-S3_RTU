@@ -43,6 +43,9 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <esp_err.h>
+#include <onewire_bus.h>
+//#include <onewire_cmd.h>
+//#include <onewire_crc.h>
 #include <onewire_device.h>
 
 
