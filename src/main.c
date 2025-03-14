@@ -291,12 +291,12 @@ static inline float rs2e_calculate_dewpoint(const float temperature, const float
  */
 static void sample_sensor_task( void *pvParameters ) {
     // bmp280 i2c device handle and configuration
-    const i2c_bmp280_config_t   bmp280_cfg = I2C_BMP280_CONFIG_DEFAULT;
-    i2c_bmp280_handle_t         bmp280_hdl;
+    const bmp280_config_t       bmp280_cfg = I2C_BMP280_CONFIG_DEFAULT;
+    bmp280_handle_t             bmp280_hdl;
 
     // initialize owb device configuration
-    owb_ds18b20_config_t         ds18b20_cfg = OWB_DS18B20_CONFIG_DEFAULT;
-    owb_ds18b20_handle_t         ds18b20_hdl;
+    ds18b20_config_t             ds18b20_cfg = OWB_DS18B20_CONFIG_DEFAULT;
+    ds18b20_handle_t             ds18b20_hdl;
     onewire_device_iter_handle_t ds18b20_iter_hdl;
     onewire_device_t             ds18b20;
 
@@ -310,7 +310,7 @@ static void sample_sensor_task( void *pvParameters ) {
     };
 
     // attempt to initialize a bmp280 device handle
-    i2c_bmp280_init(s_i2c0_bus_hdl, &bmp280_cfg, &bmp280_hdl);
+    bmp280_init(s_i2c0_bus_hdl, &bmp280_cfg, &bmp280_hdl);
     if (bmp280_hdl == NULL) {
         ESP_LOGE(TAG, "Unable to initialize bmp280 device handle");
         esp_restart(); 
@@ -320,9 +320,9 @@ static void sample_sensor_task( void *pvParameters ) {
     ESP_ERROR_CHECK( onewire_new_device_iter(s_owb0_bus_hdl, &ds18b20_iter_hdl) );
     
     // get next 1-wire device
-    if (onewire_device_iter_get_next(ds18b20_iter_hdl, &ds18b20) == ESP_OK) { // found a new device, let's check if we can upgrade it to a DS18B20
+    if (onewire_device_iter_get_next(ds18b20_iter_hdl, &ds18b20) == ESP_OK) {
         // check if the device is a ds18b20, if so, return the ds18b20 handle
-        if (owb_ds18b20_init(&ds18b20, &ds18b20_cfg, &ds18b20_hdl) == ESP_OK) {
+        if (ds18b20_init(&ds18b20, &ds18b20_cfg, &ds18b20_hdl) == ESP_OK) {
             ESP_LOGI(TAG, "Found a ds18b20, address: %016llX", ds18b20.address);
         } else {
             ESP_LOGI(TAG, "Found an unknown device, address: %016llX", ds18b20.address);
@@ -447,7 +447,7 @@ static void sample_sensor_task( void *pvParameters ) {
 
         /* attempt to get ground temperature over owb from ds18b20 sensor */
         float tg_sample;
-        result = owb_ds18b20_get_measurement(ds18b20_hdl, &tg_sample);
+        result = ds18b20_get_measurement(ds18b20_hdl, &tg_sample);
         if(result != ESP_OK) {
             tg_sample = NAN;
 
@@ -458,7 +458,7 @@ static void sample_sensor_task( void *pvParameters ) {
 
         /* attempt to get atmospheric pressure over i2c from bmp280 sensor */
         float pa_sample;
-        result = i2c_bmp280_get_pressure(bmp280_hdl, &pa_sample);
+        result = bmp280_get_pressure(bmp280_hdl, &pa_sample);
         if(result != ESP_OK) {
             pa_sample = NAN;
             ESP_LOGE(TAG, "BMP280 device read failed (%s)", esp_err_to_name(result));
@@ -470,8 +470,8 @@ static void sample_sensor_task( void *pvParameters ) {
     }
     /* free resources */;
     mbc_master_destroy();
-    i2c_bmp280_delete( bmp280_hdl );
-    owb_ds18b20_delete( ds18b20_hdl );
+    bmp280_delete( bmp280_hdl );
+    ds18b20_delete( ds18b20_hdl );
     vTaskDelete( NULL );
 }
 

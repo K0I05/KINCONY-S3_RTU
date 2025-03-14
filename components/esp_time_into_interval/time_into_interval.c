@@ -32,7 +32,7 @@
  *
  * MIT Licensed as described in the file LICENSE
  */
-#include "time_into_interval.h"
+#include "include/time_into_interval.h"
 #include <string.h>
 #include <time.h>
 #include <sys/time.h>
@@ -46,7 +46,7 @@
 #include <freertos/task.h>
 #include <freertos/semphr.h>
 
-#define TIME_INTO_INTERVAL_NAME_MAX_SIZE         (25)        //!< 25-characters for user-defined time-into-interval name
+#define TIME_INTO_INTERVAL_NAME_MAX_LEN         (25)        //!< 25-characters for user-defined time-into-interval name
 
 /*
  * macro definitions
@@ -54,7 +54,7 @@
 #define ESP_ARG_CHECK(VAL) do { if (!(VAL)) return ESP_ERR_INVALID_ARG; } while (0)
 
 /*
-* static constant declerations
+* static constant declarations
 */
 static const char *TAG = "time_into_interval";
 
@@ -66,7 +66,68 @@ static const char *TAG = "time_into_interval";
  */
 static inline uint16_t time_into_interval_get_hash_code(void) {
     uint16_t seed_hash = (uint16_t)time_into_interval_get_epoch_timestamp();
-    return ((seed_hash>>16) ^ (seed_hash)) & 0xFFFF;
+    return ((seed_hash>>16) ^ seed_hash) & 0xFFFF;
+}
+
+/**
+ * @brief Initializes the next tm structure time-parts based on interval-type.
+ * 
+ * @param[in] interval_type Time into interval type (seconds, minutes, hours, etc.).
+ * @param[in] interval_period_msec Time into interval period in milliseconds.
+ * @param[in] now_tm Current time tm structure.
+ * @param[out] next_tm Next time tm structure.
+ */
+static inline void time_into_interval_init_next_tm(const time_into_interval_types_t interval_type, const uint64_t interval_period_msec, const struct tm now_tm, struct tm *next_tm) {
+    struct tm out_tm;
+
+    // initialize next tm structure time-parts localtime based on interval-type
+    switch(interval_type) {
+        case TIME_INTO_INTERVAL_SEC:
+            out_tm.tm_year = now_tm.tm_year;
+            out_tm.tm_mon  = now_tm.tm_mon;
+            out_tm.tm_mday = now_tm.tm_mday;
+            out_tm.tm_hour = now_tm.tm_hour;
+            out_tm.tm_min  = now_tm.tm_min;
+            out_tm.tm_sec  = 0;
+            break;
+        case TIME_INTO_INTERVAL_MIN:
+            out_tm.tm_year = now_tm.tm_year;
+            out_tm.tm_mon  = now_tm.tm_mon;
+            out_tm.tm_mday = now_tm.tm_mday;
+            out_tm.tm_hour = now_tm.tm_hour;
+            out_tm.tm_min  = 0;
+            out_tm.tm_sec  = 0;
+            break;
+        case TIME_INTO_INTERVAL_HR:
+            out_tm.tm_year = now_tm.tm_year;
+            out_tm.tm_mon  = now_tm.tm_mon;
+            out_tm.tm_mday = now_tm.tm_mday;
+            out_tm.tm_hour = 0;
+            out_tm.tm_min  = 0;
+            out_tm.tm_sec  = 0;
+            break;
+    }
+
+    /* handle interval period by tm structure time-part timespan exceedance */
+    if(interval_period_msec > (60U * 1000U)) {
+        /* over 60-seconds, set minute time-part to 0 */
+        out_tm.tm_min  = 0;
+        out_tm.tm_sec  = 0;
+    } else if(interval_period_msec > (60U * 60U * 1000U)) {
+        /* over 60-minutes, set hour time-part to 0 */
+        out_tm.tm_hour = 0;
+        out_tm.tm_min  = 0;
+        out_tm.tm_sec  = 0;
+    } else if(interval_period_msec > (24U * 60U * 60U * 1000U)) {
+        /* over 24-hours, set day time-part to 0 */
+        out_tm.tm_mday = 0;
+        out_tm.tm_hour = 0;
+        out_tm.tm_min  = 0;
+        out_tm.tm_sec  = 0;
+    }
+
+    /* set output parameter */
+    *next_tm = out_tm;
 }
 
 uint64_t time_into_interval_normalize_interval_to_sec(const time_into_interval_types_t interval_type, const uint16_t interval) {
@@ -172,61 +233,29 @@ esp_err_t time_into_interval_set_epoch_timestamp_event(const time_into_interval_
     localtime_r(&now_unix_time, &now_tm);
 
     // initialize next tm structure time-parts localtime based on interval-type
-    switch(interval_type) {
-        case TIME_INTO_INTERVAL_SEC:
-            next_tm.tm_year = now_tm.tm_year;
-            next_tm.tm_mon  = now_tm.tm_mon;
-            next_tm.tm_mday = now_tm.tm_mday;
-            next_tm.tm_hour = now_tm.tm_hour;
-            next_tm.tm_min  = now_tm.tm_min;
-            next_tm.tm_sec  = 0;
-            break;
-        case TIME_INTO_INTERVAL_MIN:
-            next_tm.tm_year = now_tm.tm_year;
-            next_tm.tm_mon  = now_tm.tm_mon;
-            next_tm.tm_mday = now_tm.tm_mday;
-            next_tm.tm_hour = now_tm.tm_hour;
-            next_tm.tm_min  = 0;
-            next_tm.tm_sec  = 0;
-            break;
-        case TIME_INTO_INTERVAL_HR:
-            next_tm.tm_year = now_tm.tm_year;
-            next_tm.tm_mon  = now_tm.tm_mon;
-            next_tm.tm_mday = now_tm.tm_mday;
-            next_tm.tm_hour = 0;
-            next_tm.tm_min  = 0;
-            next_tm.tm_sec  = 0;
-            break;
-    }
+    time_into_interval_init_next_tm(interval_type, interval_period_msec, now_tm, &next_tm);
+    
+    // initialize next epoch time event
+    uint64_t next_unix_time_msec = 0;
 
-    /* handle interval period by tm structure time-part timespan exceedance */
-    if(interval_period_msec > (60U * 1000U)) {
-        /* over 60-seconds, set minute time-part to 0 */
-        next_tm.tm_min  = 0;
-        next_tm.tm_sec  = 0;
-    } else if(interval_period_msec > (60U * 60U * 1000U)) {
-        /* over 60-minutes, set hour time-part to 0 */
-        next_tm.tm_hour = 0;
-        next_tm.tm_min  = 0;
-        next_tm.tm_sec  = 0;
-    } else if(interval_period_msec > (24U * 60U * 60U * 1000U)) {
-        /* over 24-hours, set day time-part to 0 */
-        next_tm.tm_mday = 0;
-        next_tm.tm_hour = 0;
-        next_tm.tm_min  = 0;
-        next_tm.tm_sec  = 0;
+    // validate last event
+    if(*epoch_timestamp > 0) {
+        // add task interval to next task event epoch to compute next task event epoch
+        next_unix_time_msec = *epoch_timestamp + interval_period_msec;
+
+        // compute the delta between now and next unix times
+        int64_t delta_time_msec = next_unix_time_msec - now_unix_time_msec;
+
+        // ensure next task event is ahead in time
+        if(delta_time_msec <= 0) {
+            next_unix_time_msec = 0;
+        }
     }
     
-    // validate if the next task event was computed
-    if(*epoch_timestamp != 0) {
-        // add task interval to next task event epoch to compute next task event epoch
-        *epoch_timestamp = *epoch_timestamp + interval_period_msec;
-    } else {
-        // convert to unix time (seconds)
-        time_t next_unix_time = mktime(&next_tm);
-
+    // validate next event
+    if(next_unix_time_msec == 0) {
         // convert unix time to milli-seconds
-        uint64_t next_unix_time_msec = next_unix_time * 1000U;
+        next_unix_time_msec = mktime(&next_tm) * 1000U;
 
         // initialize next unix time by adding the task event interval period and offset
         next_unix_time_msec = next_unix_time_msec + interval_period_msec + interval_offset_msec;
@@ -243,12 +272,12 @@ esp_err_t time_into_interval_set_epoch_timestamp_event(const time_into_interval_
                 
                 // compute the delta between now and next unix times
                 delta_time_msec = next_unix_time_msec - now_unix_time_msec;
-            } while(delta_time_msec <= 0);
+            } while(delta_time_msec < 0);
         }
-
-        // set next task event epoch time
-        *epoch_timestamp = next_unix_time_msec;
     }
+
+    // set next task event epoch time
+    *epoch_timestamp = next_unix_time_msec;
 
     return ESP_OK;
 }
@@ -259,12 +288,12 @@ esp_err_t time_into_interval_init(const time_into_interval_config_t *time_into_i
     time_into_interval_handle_t out_handle;
     
     /* validate task-schedule arguments */
-    ESP_GOTO_ON_FALSE( (strlen(time_into_interval_config->name) <= TIME_INTO_INTERVAL_NAME_MAX_SIZE), ESP_ERR_INVALID_ARG, err, TAG, "time-into-interval name cannot exceed 20-characters, time-into-interval handle initialization failed" );
+    ESP_GOTO_ON_FALSE( (strnlen(time_into_interval_config->name, TIME_INTO_INTERVAL_NAME_MAX_LEN + 1) < TIME_INTO_INTERVAL_NAME_MAX_LEN), ESP_ERR_INVALID_ARG, err, TAG, "time-into-interval name cannot exceed 20-characters, time-into-interval handle initialization failed" );
     ESP_GOTO_ON_FALSE( (time_into_interval_config->interval_period > 0), ESP_ERR_INVALID_ARG, err, TAG, "time-into-interval interval period cannot be 0, time-into-interval handle initialization failed" );
 
     /* validate period and offset intervals */
-    int64_t interval_delta = time_into_interval_normalize_interval_to_sec(time_into_interval_config->interval_type, time_into_interval_config->interval_period) - 
-                             time_into_interval_normalize_interval_to_sec(time_into_interval_config->interval_type, time_into_interval_config->interval_offset); 
+    int64_t interval_delta = time_into_interval_normalize_interval_to_msec(time_into_interval_config->interval_type, time_into_interval_config->interval_period) - 
+                             time_into_interval_normalize_interval_to_msec(time_into_interval_config->interval_type, time_into_interval_config->interval_offset); 
     ESP_GOTO_ON_FALSE( (interval_delta > 0), ESP_ERR_INVALID_ARG, err, TAG, "time-into-interval interval period must be larger than the interval offset, time-into-interval handle initialization failed" );
     
     /* validate memory availability for time into interval handle */
@@ -361,14 +390,11 @@ esp_err_t time_into_interval_delay(time_into_interval_handle_t time_into_interva
         delta_msec = time_into_interval_handle->epoch_timestamp - now_unix_msec;
     }
 
-    // compute ticks delay from time delta
-    TickType_t delay = (delta_msec / portTICK_PERIOD_MS);
-
     /* unlock the mutex */
     xSemaphoreGive(time_into_interval_handle->mutex_handle);
 
     // delay the task per ticks delay
-    vTaskDelay( delay );
+    vTaskDelay( delta_msec / portTICK_PERIOD_MS );
 
     /* lock the mutex */
     xSemaphoreTake(time_into_interval_handle->mutex_handle, portMAX_DELAY);
@@ -411,4 +437,12 @@ esp_err_t time_into_interval_delete(time_into_interval_handle_t time_into_interv
     }
 
     return ESP_OK;
+}
+
+const char* time_into_interval_get_fw_version(void) {
+    return TIME_INTO_INTERVAL_FW_VERSION_STR;
+}
+
+int32_t time_into_interval_get_fw_version_number(void) {
+    return TIME_INTO_INTERVAL_FW_VERSION_INT32;
 }

@@ -44,13 +44,12 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #include <freertos/semphr.h>
+#include "time_into_interval_version.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-
-// TODO? - add multi-thread synch (i.e. mutex)??
 
 /**
  * @brief Time into interval types enumerator.
@@ -108,7 +107,7 @@ typedef struct time_into_interval_t *time_into_interval_handle_t;
 uint64_t time_into_interval_normalize_interval_to_sec(const time_into_interval_types_t interval_type, const uint16_t interval);
 
 /**
- * @brief Normalizes time-into-interval period or offset to milli-seconds.
+ * @brief Normalizes time-into-interval period or offset to milliseconds.
  * 
  * @param[in] interval_type Time-into-interval type of interval period or offset.
  * @param[in] interval Time-into-interval period or offset for interval type.
@@ -125,9 +124,9 @@ uint64_t time_into_interval_normalize_interval_to_msec(const time_into_interval_
 uint64_t time_into_interval_get_epoch_timestamp(void);
 
 /**
- * @brief Gets unix epoch timestamp (UTC) in milli-seconds from system clock.
+ * @brief Gets unix epoch timestamp (UTC) in milliseconds from system clock.
  * 
- * @return uint64_t Unix epoch timestamp (UTC) in milli-seconds or it will return 0-milli-seconds 
+ * @return uint64_t Unix epoch timestamp (UTC) in milliseconds or it will return 0-milli-seconds 
  * when there is an issue accessing the system clock.
  */
 uint64_t time_into_interval_get_epoch_timestamp_msec(void);
@@ -152,9 +151,9 @@ uint64_t time_into_interval_get_epoch_timestamp_usec(void);
  * and period is every 5-minutes with a 1-minute offset, the event will trigger on-time with the
  * system clock i.e. 09:01:00, 09:06:00, 09:11:00, etc.
  * 
- * @param[in] interval_type Data-logger time interval type.
- * @param[in] interval_period Data-logger time interval period for interval type.
- * @param[in] interval_offset Data-logger time interval offset for interval type.
+ * @param[in] interval_type Time into interval type (seconds, minutes, hours, etc.).
+ * @param[in] interval_period Time into interval period for interval type.
+ * @param[in] interval_offset Time into interval offset for interval type.
  * @param[out] epoch_timestamp Unix epoch timestamp (UTC) of next event in milli-seconds.
  */
 esp_err_t time_into_interval_set_epoch_timestamp_event(const time_into_interval_types_t interval_type, const uint16_t interval_period, const uint16_t interval_offset, uint64_t *epoch_timestamp);
@@ -219,6 +218,20 @@ esp_err_t time_into_interval_get_last_event(time_into_interval_handle_t time_int
  */
 esp_err_t time_into_interval_delete(time_into_interval_handle_t time_into_interval_handle);
 
+
+/**
+ * @brief Converts time-into-interval firmware version numbers (major, minor, patch) into a string.
+ * 
+ * @return char* time-into-interval firmware version as a string that is formatted as X.X.X (e.g. 4.0.0).
+ */
+const char* time_into_interval_get_fw_version(void);
+
+/**
+ * @brief Converts time-into-interval firmware version numbers (major, minor, patch) into an integer value.
+ * 
+ * @return int32_t time-into-interval firmware version number.
+ */
+int32_t time_into_interval_get_fw_version_number(void);
 
 
 #ifdef __cplusplus

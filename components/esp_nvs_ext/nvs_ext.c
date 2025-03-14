@@ -32,7 +32,7 @@
  *
  * MIT Licensed as described in the file LICENSE
  */
-#include "nvs_ext.h"
+#include "include/nvs_ext.h"
 #include <string.h>
 #include <esp_log.h>
 #include <esp_check.h>
@@ -45,7 +45,7 @@
 #define NVS_EXT_NAMESPACE                   "nvs_ext_data"
 
 /*
-* static constant declerations
+* static constant declarations
 */
 static const char *TAG = "nvs_ext";
 
@@ -70,7 +70,7 @@ esp_err_t nvs_write_float(const char *key, float write_value) {
         return ESP_ERR_NO_MEM;
     }
     int32_t result = snprintf(data, NVS_EXT_FLOAT_MAX_STRING_LENGTH, "%f", write_value);
-    if (result >= 0 && result <= strlen(data)) {
+    if (result >= 0 && result <= strnlen(data, NVS_EXT_FLOAT_MAX_STRING_LENGTH)) {
         err = nvs_open(NVS_EXT_NAMESPACE, NVS_READWRITE, &handle);
         ESP_LOGD(TAG, "Save %s = %s", key, data);
         err = nvs_set_str(handle, key, data);
@@ -134,7 +134,7 @@ esp_err_t nvs_write_double(const char *key, double write_value) {
         return ESP_ERR_NO_MEM;
     }
     int32_t result = snprintf(data, NVS_EXT_DOUBLE_MAX_STRING_LENGTH, "%lf", write_value);
-    if (result >= 0 && result <= strlen(data)) {
+    if (result >= 0 && result <= strnlen(data, NVS_EXT_DOUBLE_MAX_STRING_LENGTH)) {
         err = nvs_open(NVS_EXT_NAMESPACE, NVS_READWRITE, &handle);
         ESP_LOGD(TAG, "Save %s = %s", key, data);
         err = nvs_set_str(handle, key, data);
@@ -539,3 +539,10 @@ esp_err_t nvs_read_struct(const char *key, void **read_struct, size_t size) {
     return err;
 }
 
+const char* nvs_ext_get_fw_version(void) {
+    return NVS_EXT_FW_VERSION_STR;
+}
+
+int32_t nvs_ext_get_fw_version_number(void) {
+    return NVS_EXT_FW_VERSION_INT32;
+}

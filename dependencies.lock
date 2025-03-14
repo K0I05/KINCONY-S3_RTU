@@ -1,9 +1,27 @@
 dependencies:
+  espressif/onewire_bus:
+    component_hash: null
+    source:
+      path: C:\Users\lavco\OneDrive\Documents\PlatformIO\Projects\KINCONY-S3_RTU_20250110
+      type: local
+    version: '*'
   idf:
     component_hash: null
     source:
       type: idf
-    version: 5.3.1
-manifest_hash: 0568aa6b3c0f716128e439f4b23591f4ebe3e2dafdb4c11eb5cf907cb5040725
+    version: 5.4.0
+  k0i05/esp_driver_i2c_ext:
+    component_hash: null
+    source:
+      path: C:\Users\lavco\OneDrive\Documents\PlatformIO\Projects\KINCONY-S3_RTU_20250110
+      type: local
+    version: '*'
+  k0i05/esp_type_utils:
+    component_hash: null
+    source:
+      path: C:\Users\lavco\OneDrive\Documents\PlatformIO\Projects\KINCONY-S3_RTU_20250110
+      type: local
+    version: '*'
+manifest_hash: 9b3713e62bc48ddaf8ad9c64f81c1d0707bebccd042d6928c38e88c81aa36372
 target: esp32s3
 version: 1.0.0
