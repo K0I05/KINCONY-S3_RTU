@@ -192,9 +192,9 @@ esp_err_t ds18b20_init(onewire_device_t *device, const ds18b20_config_t *ds18b20
     ESP_RETURN_ON_FALSE( out_handle, ESP_ERR_NO_MEM, TAG, "no memory for device, ds18b20 device handle initialization failed" );
 
     /* copy configuration */
-    out_handle->owb_handle  = device->bus;
+	out_handle->owb_handle  = device->bus;
     out_handle->owb_address = device->address;
-    out_handle->dev_config = *ds18b20_config;
+    out_handle->dev_config  = *ds18b20_config;
 
     /* set temperature resolution */
     ESP_RETURN_ON_ERROR( ds18b20_set_resolution(out_handle, out_handle->dev_config.resolution), TAG, "unable to write temperature resolution, ds18b20 device handle initialization failed" );
@@ -213,7 +213,7 @@ esp_err_t ds18b20_init(onewire_device_t *device, const ds18b20_config_t *ds18b20
     return ESP_OK;
 }
 
-esp_err_t ds18b20_get_measurement(ds18b20_handle_t handle, float *const temperature) {
+esp_err_t ds18b20_get_temperature(ds18b20_handle_t handle, float *const temperature) {
     /* validate arguments */
     ESP_ARG_CHECK( handle );
 
@@ -221,42 +221,12 @@ esp_err_t ds18b20_get_measurement(ds18b20_handle_t handle, float *const temperat
     ESP_RETURN_ON_ERROR( ds18b20_trigger_temperature_conversion(handle), TAG, "unable to trigger temperature conversion, get measurement failed" );
 
     /* read temperature */
-    ESP_RETURN_ON_ERROR( ds18b20_get_temperature(handle, temperature), TAG, "unable to read temperature, get measurement failed" );
+    ESP_RETURN_ON_ERROR( ds18b20_get_measurement(handle, temperature), TAG, "unable to read temperature, get measurement failed" );
 
     return ESP_OK;
 }
 
-esp_err_t ds18b20_get_temperature__(ds18b20_handle_t handle, float *const temperature) {
-    /* validate arguments */
-    ESP_ARG_CHECK( handle );
-
-    // reset bus and check if the ds18b20 is present
-    ESP_RETURN_ON_ERROR( onewire_bus_reset(handle->owb_handle), TAG, "reset bus error" );
-
-    // send command: DS18B20_CMD_READ_SCRATCHPAD
-    ESP_RETURN_ON_ERROR( ds18b20_send_command(handle, DS18B20_CMD_SCRATCHPAD_READ), TAG, "send DS18B20_CMD_READ_SCRATCHPAD failed" );
-
-    // read scratchpad data
-    ds18b20_scratchpad_t scratchpad;
-    ESP_RETURN_ON_ERROR( onewire_bus_read_bytes(handle->owb_handle, (uint8_t *)&scratchpad, sizeof(scratchpad)), TAG, "error while reading scratchpad data" );
-
-    // validate crc
-    ESP_RETURN_ON_FALSE( onewire_crc8(0, (uint8_t *)&scratchpad, 8) == scratchpad.crc, ESP_ERR_INVALID_CRC, TAG, "scratchpad crc error");
-
-    // init LSB bit masking
-    const uint8_t lsb_mask[] = { 0x07, 0x03, 0x01, 0x00 }; // mask bits not used in low resolution
-    const uint8_t lsb_masked = scratchpad.temp_lsb & (~lsb_mask[scratchpad.configuration >> 5]);
-
-    // combine the MSB and masked LSB into a signed 16-bit integer
-    int16_t temperature_raw = (((int16_t)scratchpad.temp_msb << 8) | lsb_masked);
-
-    // convert the raw temperature to a float,
-    *temperature = (float)temperature_raw / 16.0f;
-
-    return ESP_OK;
-}
-
-esp_err_t ds18b20_get_temperature(ds18b20_handle_t handle, float *const temperature) {
+esp_err_t ds18b20_get_measurement(ds18b20_handle_t handle, float *const temperature) {
     /* validate arguments */
     ESP_ARG_CHECK( handle );
 
@@ -491,9 +461,9 @@ esp_err_t ds18b20_delete(ds18b20_handle_t handle) {
 }
 
 const char* ds18b20_get_fw_version(void) {
-    return DS18S20_FW_VERSION_STR;
+    return DS18B20_FW_VERSION_STR;
 }
 
 int32_t ds18b20_get_fw_version_number(void) {
-    return DS18S20_FW_VERSION_INT32;
+    return DS18B20_FW_VERSION_INT32;
 }

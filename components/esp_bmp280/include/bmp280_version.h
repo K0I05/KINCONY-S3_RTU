@@ -1,4 +1,3 @@
-#define BMP280_FW_VERSION_PATCH 7
 /*
  * The MIT License (MIT)
  *
@@ -23,18 +22,13 @@
  */
 
 /**
- * @file bmp280_version.h
- * @defgroup drivers bmp280
- * @{
- *
- * ESP-IDF driver for bmp280 sensor
- *
  * Copyright (c) 2024 Eric Gionet (gionet.c.eric@gmail.com)
  *
  * MIT Licensed as described in the file LICENSE
  */
-#ifndef __BMP280_VERSION_H__
-#define __BMP280_VERSION_H__
+
+#ifndef __BMP280_FW_VERSION_H__
+#define __BMP280_FW_VERSION_H__
 
 #include <stdint.h>
 
@@ -42,16 +36,25 @@
 extern "C" {
 #endif
 
+
 /**
  * public constant definitions
  */
 
+#define BMP280_COMPONENT_NAME              "esp_bmp280"
+/** Version release date  */
+#define BMP280_FW_VERSION_DATE             "2025-04-04"
 /** Major version number (X.x.x) */
-#define BMP280_FW_VERSION_MAJOR 1
+#define BMP280_FW_VERSION_MAJOR            1
 /** Minor version number (x.X.x) */
-#define BMP280_FW_VERSION_MINOR 1
+#define BMP280_FW_VERSION_MINOR            2
 /** Patch version number (x.x.X) */
-#define BMP280_FW_VERSION_PATCH 7
+#define BMP280_FW_VERSION_PATCH            6
+/** Semantic version number (X.X.X-X) */
+#define BMP280_FW_SEMANTIC_VERSION         "1.2.6-13"
+/** Git version hash */
+#define BMP280_FW_GIT_SHORT_SHA            "d3a11bf"
+
 
 /**
  * public macro definitions
@@ -70,34 +73,31 @@ extern "C" {
 /** 
  * Macro to generate current firmware version numbers (major, minor, patch) into a string that is formatted as X.X.X (e.g. 4.0.0). 
  */
-#define BMP280_FW_VERSION_STR              \
+#define BMP280_FW_VERSION_STR                        \
         STR( BMP280_FW_VERSION_MAJOR ) "." \
         STR( BMP280_FW_VERSION_MINOR ) "." \
-        STR( BMP280_FW_VERSION_PATCH ) 
+        STR( BMP280_FW_VERSION_PATCH )
 
 /** 
  * Macro to convert firmware version parameters (major, minor, patch numbers) into an integer (`int32_t`) 
  * value that can be used for comparison purposes.
  * 
- * As an example, [COMPONENT]_FW_VERSION_INT32 >= [COMPONENT]_FW_VERSION_PARAMS_INT32(4, 0, 0).
+ * As an example, FW_VERSION_INT32 >= FW_VERSION_PARAMS_INT32(4, 0, 0).
  */
-#define BMP280_FW_VERSION_PARAMS_INT32( major, minor, patch )  \
+#define BMP280_FW_VERSION_PARAMS_INT32( major, minor, patch )        \
         ((major << 16) | (minor << 8) | (patch))
 
 /**
  * Macro to generate current firmware version numbers (major, minor, patch) as an integer (`int32_t`) value that can 
  * be used for comparison purposes.
  * 
- * As an example, [COMPONENT]_FW_VERSION_INT32 >= [COMPONENT]_FW_VERSION_PARAMS_INT32(4, 0, 0).
+ * As an example, FW_VERSION_INT32 >= FW_VERSION_PARAMS_INT32(4, 0, 0).
  */
-#define BMP280_FW_VERSION_INT32                                     \
-        BMP280_FW_VERSION_PARAMS_INT32(BMP280_FW_VERSION_MAJOR,     \
-                                          BMP280_FW_VERSION_MINOR,  \
-                                          BMP280_FW_VERSION_PATCH)
-
-
-
-
+#define BMP280_FW_VERSION_INT32            \
+        BMP280_FW_VERSION_PARAMS_INT32(    \
+                BMP280_FW_VERSION_MAJOR,   \
+                BMP280_FW_VERSION_MINOR,   \
+                BMP280_FW_VERSION_PATCH)
 
 #ifdef __cplusplus
 }
@@ -105,4 +105,4 @@ extern "C" {
 
 /**@}*/
 
-#endif // __BMP280_VERSION_H__
+#endif //__BMP280_FW_VERSION_H__

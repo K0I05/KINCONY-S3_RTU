@@ -22,18 +22,13 @@
  */
 
 /**
- * @file ds18b20_version.h
- * @defgroup drivers ds18b20
- * @{
- *
- * ESP-IDF driver for ds18b20 sensor
- *
  * Copyright (c) 2024 Eric Gionet (gionet.c.eric@gmail.com)
  *
  * MIT Licensed as described in the file LICENSE
  */
-#ifndef __DS18S20_VERSION_H__
-#define __DS18S20_VERSION_H__
+
+#ifndef __DS18B20_FW_VERSION_H__
+#define __DS18B20_FW_VERSION_H__
 
 #include <stdint.h>
 
@@ -41,16 +36,24 @@
 extern "C" {
 #endif
 
+
 /**
  * public constant definitions
  */
 
+#define DS18B20_COMPONENT_NAME              "esp_ds18b20"
+/** Version release date  */
+#define DS18B20_FW_VERSION_DATE             "2025-04-04"
 /** Major version number (X.x.x) */
-#define DS18S20_FW_VERSION_MAJOR 1
+#define DS18B20_FW_VERSION_MAJOR            1
 /** Minor version number (x.X.x) */
-#define DS18S20_FW_VERSION_MINOR 1
+#define DS18B20_FW_VERSION_MINOR            2
 /** Patch version number (x.x.X) */
-#define DS18S20_FW_VERSION_PATCH 0
+#define DS18B20_FW_VERSION_PATCH            6
+/** Semantic version number (X.X.X-X) */
+#define DS18B20_FW_SEMANTIC_VERSION         "1.2.6-13"
+/** Git version hash */
+#define DS18B20_FW_GIT_SHORT_SHA            "d3a11bf"
 
 
 /**
@@ -70,34 +73,31 @@ extern "C" {
 /** 
  * Macro to generate current firmware version numbers (major, minor, patch) into a string that is formatted as X.X.X (e.g. 4.0.0). 
  */
-#define DS18S20_FW_VERSION_STR                        \
-        STR( DS18S20_FW_VERSION_MAJOR ) "." \
-        STR( DS18S20_FW_VERSION_MINOR ) "." \
-        STR( DS18S20_FW_VERSION_PATCH )
+#define DS18B20_FW_VERSION_STR                        \
+        STR( DS18B20_FW_VERSION_MAJOR ) "." \
+        STR( DS18B20_FW_VERSION_MINOR ) "." \
+        STR( DS18B20_FW_VERSION_PATCH )
 
 /** 
  * Macro to convert firmware version parameters (major, minor, patch numbers) into an integer (`int32_t`) 
  * value that can be used for comparison purposes.
  * 
- * As an example, [COMPONENT]_FW_VERSION_INT32 >= [COMPONENT]_FW_VERSION_PARAMS_INT32(4, 0, 0).
+ * As an example, FW_VERSION_INT32 >= FW_VERSION_PARAMS_INT32(4, 0, 0).
  */
-#define DS18S20_FW_VERSION_PARAMS_INT32( major, minor, patch )        \
+#define DS18B20_FW_VERSION_PARAMS_INT32( major, minor, patch )        \
         ((major << 16) | (minor << 8) | (patch))
 
 /**
  * Macro to generate current firmware version numbers (major, minor, patch) as an integer (`int32_t`) value that can 
  * be used for comparison purposes.
  * 
- * As an example, [COMPONENT]_FW_VERSION_INT32 >= [COMPONENT]_FW_VERSION_PARAMS_INT32(4, 0, 0).
+ * As an example, FW_VERSION_INT32 >= FW_VERSION_PARAMS_INT32(4, 0, 0).
  */
-#define DS18S20_FW_VERSION_INT32                                      \
-        DS18S20_FW_VERSION_PARAMS_INT32(DS18S20_FW_VERSION_MAJOR,   \
-                                        DS18S20_FW_VERSION_MINOR,   \
-                                        DS18S20_FW_VERSION_PATCH)
-
-
-
-
+#define DS18B20_FW_VERSION_INT32            \
+        DS18B20_FW_VERSION_PARAMS_INT32(    \
+                DS18B20_FW_VERSION_MAJOR,   \
+                DS18B20_FW_VERSION_MINOR,   \
+                DS18B20_FW_VERSION_PATCH)
 
 #ifdef __cplusplus
 }
@@ -105,4 +105,4 @@ extern "C" {
 
 /**@}*/
 
-#endif // __DS18S20_VERSION_H__
+#endif //__DS18B20_FW_VERSION_H__

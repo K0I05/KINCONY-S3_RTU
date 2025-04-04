@@ -14,12 +14,12 @@
     "url": "https://github.com/K0I05/ESP32-S3_ESP-IDF_COMPONENTS/tree/main/components/peripherals/i2c/esp_bmp280"
   },
   "homepage": "https://github.com/K0I05/ESP32-S3_ESP-IDF_COMPONENTS",
-  "version": "1.1.7",
+  "version": "1.2.6",
   "license": "MIT",
   "frameworks": "espidf",
   "platforms": "espressif32",
   "headers": "bmp280.h",
   "dependencies": {
-    "k0i05/esp_driver_i2c_ext": ">=1.0.0"
+    "k0i05/esp_type_utils": ">=1.0.0"
   }
 }

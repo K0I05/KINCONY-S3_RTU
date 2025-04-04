@@ -182,7 +182,7 @@ esp_err_t ds18b20_init(onewire_device_t *device, const ds18b20_config_t *ds18b20
  * @param temperature Temperature in degree Celsius.
  * @return esp_err_t ESP_OK on success.
  */
-esp_err_t ds18b20_get_measurement(ds18b20_handle_t handle, float *const temperature);
+esp_err_t ds18b20_get_temperature(ds18b20_handle_t handle, float *const temperature);
 
 /**
  * @brief Reads temperature from DS18B20.
@@ -193,7 +193,7 @@ esp_err_t ds18b20_get_measurement(ds18b20_handle_t handle, float *const temperat
  * @param temperature Temperature in degree Celsius.
  * @return esp_err_t ESP_OK on success.
  */
-esp_err_t ds18b20_get_temperature(ds18b20_handle_t handle, float *const temperature);
+esp_err_t ds18b20_get_measurement(ds18b20_handle_t handle, float *const temperature);
 
 /**
  * @brief Triggers DS18B20 temperature conversion.  This function must be called before reading the temperature from DS18B20.

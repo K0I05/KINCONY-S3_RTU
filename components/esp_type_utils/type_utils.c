@@ -33,7 +33,7 @@
  * MIT Licensed as described in the file LICENSE
  */
 
-#include "include/type_utils.h"
+#include "type_utils.h"
 #include <string.h>
 #include <stdio.h>
 
@@ -57,6 +57,7 @@
 /*
 * functions and subroutines
 */
+
 
 uint32_t get_uint32_chip_id(void) {
     uint32_t chipid = 0L;

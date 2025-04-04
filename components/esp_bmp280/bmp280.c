@@ -90,6 +90,92 @@ static const char *TAG = "bmp280";
 
 
 /**
+ * @brief BMP280 I2C read from register address transaction.  This is a write and then read process.
+ * 
+ * @param handle BMP280 device handle.
+ * @param reg_addr BMP280 register address to read from.
+ * @param buffer BMP280 read transaction return buffer.
+ * @param size Length of buffer to store results from read transaction.
+ * @return esp_err_t ESP_OK on success.
+ */
+static inline esp_err_t bmp280_i2c_read_from(bmp280_handle_t handle, const uint8_t reg_addr, uint8_t *buffer, const uint8_t size) {
+    const bit8_uint8_buffer_t tx = { reg_addr };
+
+    /* validate arguments */
+    ESP_ARG_CHECK( handle );
+
+    ESP_RETURN_ON_ERROR( i2c_master_transmit_receive(handle->i2c_handle, tx, BIT8_UINT8_BUFFER_SIZE, buffer, size, I2C_XFR_TIMEOUT_MS), TAG, "bmp280_i2c_read_from failed" );
+
+    return ESP_OK;
+}
+
+/**
+ * @brief BMP280 I2C read halfword from register address transaction.
+ * 
+ * @param handle BMP280 device handle.
+ * @param reg_addr BMP280 register address to read from.
+ * @param word BMP280 read transaction return halfword.
+ * @return esp_err_t ESP_OK on success.
+ */
+static inline esp_err_t bmp280_i2c_read_word_from(bmp280_handle_t handle, const uint8_t reg_addr, uint16_t *const word) {
+    const bit8_uint8_buffer_t tx = { reg_addr };
+    bit16_uint8_buffer_t rx = { 0 };
+
+    /* validate arguments */
+    ESP_ARG_CHECK( handle );
+
+    ESP_RETURN_ON_ERROR( i2c_master_transmit_receive(handle->i2c_handle, tx, BIT8_UINT8_BUFFER_SIZE, rx, BIT16_UINT8_BUFFER_SIZE, I2C_XFR_TIMEOUT_MS), TAG, "bmp280_i2c_read_word_from failed" );
+
+    /* set output parameter */
+    *word = (uint16_t)rx[0] | ((uint16_t)rx[1] << 8);
+
+    return ESP_OK;
+}
+
+/**
+ * @brief BMP280 I2C read byte from register address transaction.
+ * 
+ * @param handle BMP280 device handle.
+ * @param reg_addr BMP280 register address to read from.
+ * @param byte BMP280 read transaction return byte.
+ * @return esp_err_t ESP_OK on success.
+ */
+static inline esp_err_t bmp280_i2c_read_byte_from(bmp280_handle_t handle, const uint8_t reg_addr, uint8_t *const byte) {
+    const bit8_uint8_buffer_t tx = { reg_addr };
+    bit8_uint8_buffer_t rx = { 0 };
+
+    /* validate arguments */
+    ESP_ARG_CHECK( handle );
+
+    ESP_RETURN_ON_ERROR( i2c_master_transmit_receive(handle->i2c_handle, tx, BIT8_UINT8_BUFFER_SIZE, rx, BIT8_UINT8_BUFFER_SIZE, I2C_XFR_TIMEOUT_MS), TAG, "bmp280_i2c_read_byte_from failed" );
+
+    /* set output parameter */
+    *byte = rx[0];
+
+    return ESP_OK;
+}
+
+/**
+ * @brief BMP280 I2C write byte to register address transaction.
+ * 
+ * @param handle BMP280 device handle.
+ * @param reg_addr BMP280 register address to write to.
+ * @param byte BMP280 write transaction input byte.
+ * @return esp_err_t ESP_OK on success.
+ */
+static inline esp_err_t bmp280_i2c_write_byte_to(bmp280_handle_t handle, const uint8_t reg_addr, const uint8_t byte) {
+    const bit16_uint8_buffer_t tx = { reg_addr, byte };
+
+    /* validate arguments */
+    ESP_ARG_CHECK( handle );
+
+    /* attempt i2c write transaction */
+    ESP_RETURN_ON_ERROR( i2c_master_transmit(handle->i2c_handle, tx, BIT16_UINT8_BUFFER_SIZE, I2C_XFR_TIMEOUT_MS), TAG, "i2c_master_transmit, i2c write failed" );
+                        
+    return ESP_OK;
+}
+
+/**
  * @brief Temperature compensation algorithm taken from datasheet.  See datasheet for details.
  *
  * @param[in] handle BMP280 device handle.
@@ -150,20 +236,21 @@ static inline esp_err_t bmp280_get_cal_factors(bmp280_handle_t handle) {
     ESP_ARG_CHECK( handle );
 
     /* bmp280 attempt to request T1-T3 calibration values from device */
-    ESP_ERROR_CHECK( i2c_master_bus_read_uint16(handle->i2c_handle, 0x88, &handle->dev_cal_factors->dig_T1) );
-    ESP_ERROR_CHECK( i2c_master_bus_read_uint16(handle->i2c_handle, 0x8a, (uint16_t *)&handle->dev_cal_factors->dig_T2) );
-    ESP_ERROR_CHECK( i2c_master_bus_read_uint16(handle->i2c_handle, 0x8c, (uint16_t *)&handle->dev_cal_factors->dig_T3) );
+    ESP_ERROR_CHECK( bmp280_i2c_read_word_from(handle, 0x88, &handle->dev_cal_factors->dig_T1) );
+    ESP_ERROR_CHECK( bmp280_i2c_read_word_from(handle, 0x8a, (uint16_t *)&handle->dev_cal_factors->dig_T2) );
+    ESP_ERROR_CHECK( bmp280_i2c_read_word_from(handle, 0x8c, (uint16_t *)&handle->dev_cal_factors->dig_T3) );
     /* bmp280 attempt to request P1-P9 calibration values from device */
-    ESP_ERROR_CHECK( i2c_master_bus_read_uint16(handle->i2c_handle, 0x8e, &handle->dev_cal_factors->dig_P1) );
-    ESP_ERROR_CHECK( i2c_master_bus_read_uint16(handle->i2c_handle, 0x90, (uint16_t *)&handle->dev_cal_factors->dig_P2) );
-    ESP_ERROR_CHECK( i2c_master_bus_read_uint16(handle->i2c_handle, 0x92, (uint16_t *)&handle->dev_cal_factors->dig_P3) );
-    ESP_ERROR_CHECK( i2c_master_bus_read_uint16(handle->i2c_handle, 0x94, (uint16_t *)&handle->dev_cal_factors->dig_P4) );
-    ESP_ERROR_CHECK( i2c_master_bus_read_uint16(handle->i2c_handle, 0x96, (uint16_t *)&handle->dev_cal_factors->dig_P5) );
-    ESP_ERROR_CHECK( i2c_master_bus_read_uint16(handle->i2c_handle, 0x98, (uint16_t *)&handle->dev_cal_factors->dig_P6) );
-    ESP_ERROR_CHECK( i2c_master_bus_read_uint16(handle->i2c_handle, 0x9a, (uint16_t *)&handle->dev_cal_factors->dig_P7) );
-    ESP_ERROR_CHECK( i2c_master_bus_read_uint16(handle->i2c_handle, 0x9c, (uint16_t *)&handle->dev_cal_factors->dig_P8) );
-    ESP_ERROR_CHECK( i2c_master_bus_read_uint16(handle->i2c_handle, 0x9e, (uint16_t *)&handle->dev_cal_factors->dig_P9) );
+    ESP_ERROR_CHECK( bmp280_i2c_read_word_from(handle, 0x8e, &handle->dev_cal_factors->dig_P1) );
+    ESP_ERROR_CHECK( bmp280_i2c_read_word_from(handle, 0x90, (uint16_t *)&handle->dev_cal_factors->dig_P2) );
+    ESP_ERROR_CHECK( bmp280_i2c_read_word_from(handle, 0x92, (uint16_t *)&handle->dev_cal_factors->dig_P3) );
+    ESP_ERROR_CHECK( bmp280_i2c_read_word_from(handle, 0x94, (uint16_t *)&handle->dev_cal_factors->dig_P4) );
+    ESP_ERROR_CHECK( bmp280_i2c_read_word_from(handle, 0x96, (uint16_t *)&handle->dev_cal_factors->dig_P5) );
+    ESP_ERROR_CHECK( bmp280_i2c_read_word_from(handle, 0x98, (uint16_t *)&handle->dev_cal_factors->dig_P6) );
+    ESP_ERROR_CHECK( bmp280_i2c_read_word_from(handle, 0x9a, (uint16_t *)&handle->dev_cal_factors->dig_P7) );
+    ESP_ERROR_CHECK( bmp280_i2c_read_word_from(handle, 0x9c, (uint16_t *)&handle->dev_cal_factors->dig_P8) );
+    ESP_ERROR_CHECK( bmp280_i2c_read_word_from(handle, 0x9e, (uint16_t *)&handle->dev_cal_factors->dig_P9) );
 
+    /*
     ESP_LOGD(TAG, "Calibration data received:");
     ESP_LOGD(TAG, "dig_T1=%u", handle->dev_cal_factors->dig_T1);
     ESP_LOGD(TAG, "dig_T2=%d", handle->dev_cal_factors->dig_T2);
@@ -177,6 +264,7 @@ static inline esp_err_t bmp280_get_cal_factors(bmp280_handle_t handle) {
     ESP_LOGD(TAG, "dig_P7=%d", handle->dev_cal_factors->dig_P7);
     ESP_LOGD(TAG, "dig_P8=%d", handle->dev_cal_factors->dig_P8);
     ESP_LOGD(TAG, "dig_P9=%d", handle->dev_cal_factors->dig_P9);
+    */
 
     /* delay before next i2c transaction */
     vTaskDelay(pdMS_TO_TICKS(BMP280_CMD_DELAY_MS));
@@ -236,7 +324,7 @@ esp_err_t bmp280_get_chip_id_register(bmp280_handle_t handle, uint8_t *const reg
     ESP_ARG_CHECK( handle && reg );
 
     /* attempt i2c read transaction */
-    ESP_RETURN_ON_ERROR( i2c_master_bus_read_uint8(handle->i2c_handle, BMP280_REG_ID, reg), TAG, "read chip identifier register failed" );
+    ESP_RETURN_ON_ERROR( bmp280_i2c_read_byte_from(handle, BMP280_REG_ID, reg), TAG, "read chip identifier register failed" );
 
     /* delay before next i2c transaction */
     vTaskDelay(pdMS_TO_TICKS(BMP280_CMD_DELAY_MS));
@@ -249,7 +337,7 @@ esp_err_t bmp280_get_status_register(bmp280_handle_t handle, bmp280_status_regis
     ESP_ARG_CHECK( handle && reg );
 
     /* attempt i2c read transaction */
-    ESP_RETURN_ON_ERROR( i2c_master_bus_read_uint8(handle->i2c_handle, BMP280_REG_STATUS, &reg->reg), TAG, "read status register failed" );
+    ESP_RETURN_ON_ERROR( bmp280_i2c_read_byte_from(handle, BMP280_REG_STATUS, &reg->reg), TAG, "read status register failed" );
 
     /* delay before next i2c transaction */
     vTaskDelay(pdMS_TO_TICKS(BMP280_CMD_DELAY_MS));
@@ -262,7 +350,7 @@ esp_err_t bmp280_get_control_measurement_register(bmp280_handle_t handle, bmp280
     ESP_ARG_CHECK( handle && reg );
 
     /* attempt i2c read transaction */
-    ESP_RETURN_ON_ERROR( i2c_master_bus_read_uint8(handle->i2c_handle, BMP280_REG_CTRL, &reg->reg), TAG, "read control measurement register failed" );
+    ESP_RETURN_ON_ERROR( bmp280_i2c_read_byte_from(handle, BMP280_REG_CTRL, &reg->reg), TAG, "read control measurement register failed" );
 
     /* delay before next i2c transaction */
     vTaskDelay(pdMS_TO_TICKS(BMP280_CMD_DELAY_MS));
@@ -275,7 +363,7 @@ esp_err_t bmp280_set_control_measurement_register(bmp280_handle_t handle, const 
     ESP_ARG_CHECK( handle );
 
     /* attempt i2c write transaction */
-    ESP_RETURN_ON_ERROR( i2c_master_bus_write_uint8(handle->i2c_handle, BMP280_REG_CTRL, reg.reg), TAG, "write control measurement register failed" );
+    ESP_RETURN_ON_ERROR( bmp280_i2c_write_byte_to(handle, BMP280_REG_CTRL, reg.reg), TAG, "write control measurement register failed" );
 
     /* delay before next i2c transaction */
     vTaskDelay(pdMS_TO_TICKS(BMP280_CMD_DELAY_MS));
@@ -288,7 +376,7 @@ esp_err_t bmp280_get_configuration_register(bmp280_handle_t handle, bmp280_confi
     ESP_ARG_CHECK( handle && reg );
 
     /* attempt i2c read transaction */
-    ESP_RETURN_ON_ERROR( i2c_master_bus_read_uint8(handle->i2c_handle, BMP280_REG_CONFIG, &reg->reg), TAG, "read configuration register failed" );
+    ESP_RETURN_ON_ERROR( bmp280_i2c_read_byte_from(handle, BMP280_REG_CONFIG, &reg->reg), TAG, "read configuration register failed" );
 
     /* delay before next i2c transaction */
     vTaskDelay(pdMS_TO_TICKS(BMP280_CMD_DELAY_MS));
@@ -306,7 +394,7 @@ esp_err_t bmp280_set_configuration_register(bmp280_handle_t handle, const bmp280
     config.bits.reserved = 0;
 
     /* attempt i2c write transaction */
-    ESP_RETURN_ON_ERROR( i2c_master_bus_write_uint8(handle->i2c_handle, BMP280_REG_CONFIG, config.reg), TAG, "write configuration register failed" );
+    ESP_RETURN_ON_ERROR( bmp280_i2c_write_byte_to(handle, BMP280_REG_CONFIG, config.reg), TAG, "write configuration register failed" );
 
     /* delay before next i2c transaction */
     vTaskDelay(pdMS_TO_TICKS(BMP280_CMD_DELAY_MS));
@@ -401,7 +489,7 @@ esp_err_t bmp280_get_measurements(bmp280_handle_t handle, float *const temperatu
     } while (data_is_ready == false);
 
     // need to read in one sequence to ensure they match.
-    ESP_GOTO_ON_ERROR( i2c_master_bus_read_byte48(handle->i2c_handle, BMP280_REG_PRESSURE, &rx), err, TAG, "read temperature and pressure data failed" );
+    ESP_GOTO_ON_ERROR( bmp280_i2c_read_from(handle, BMP280_REG_PRESSURE, rx, BIT48_UINT8_BUFFER_SIZE), err, TAG, "read temperature and pressure data failed" );
 
     /* concat adc pressure & temperature bytes */
     int32_t adc_press = rx[0] << 12 | rx[1] << 4 | rx[2] >> 4;
@@ -632,7 +720,7 @@ esp_err_t bmp280_reset(bmp280_handle_t handle) {
     ESP_ARG_CHECK( handle );
 
     /* attempt i2c transaction */
-    ESP_RETURN_ON_ERROR( i2c_master_bus_write_uint8(handle->i2c_handle, BMP280_REG_RESET, BMP280_RESET_VALUE), TAG, "write reset register for reset failed" );
+    ESP_RETURN_ON_ERROR( bmp280_i2c_write_byte_to(handle, BMP280_REG_RESET, BMP280_RESET_VALUE), TAG, "write reset register for reset failed" );
 
     /* wait until finished copying NVP data */
     // forced delay before next transaction - see datasheet for details

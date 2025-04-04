@@ -10,18 +10,12 @@ dependencies:
     source:
       type: idf
     version: 5.4.0
-  k0i05/esp_driver_i2c_ext:
-    component_hash: null
-    source:
-      path: C:\Users\lavco\OneDrive\Documents\PlatformIO\Projects\KINCONY-S3_RTU_20250110
-      type: local
-    version: '*'
   k0i05/esp_type_utils:
     component_hash: null
     source:
       path: C:\Users\lavco\OneDrive\Documents\PlatformIO\Projects\KINCONY-S3_RTU_20250110
       type: local
     version: '*'
-manifest_hash: 9b3713e62bc48ddaf8ad9c64f81c1d0707bebccd042d6928c38e88c81aa36372
+manifest_hash: 4ad2a67f3eb51254500f0080b365602b1867c84062403cc1d4191d3bf3419897
 target: esp32s3
 version: 1.0.0
